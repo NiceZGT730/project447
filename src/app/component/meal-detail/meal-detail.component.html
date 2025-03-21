@@ -1,17 +1,18 @@
-@if (isLoading()) {
-<div>Loading...</div>
-}
+<form [formGroup]="formGroup" (ngSubmit)="onSubmit()">
+  <label>
+    <b>Search meals</b>
+    <input type="text" formControlName="q" />
+  </label>
+  <button type="submit">Search</button>
+  <button type="button" (click)="clear()">Clear</button>
+</form>
 
-@if (meal()) {
-<div>
-  <h2>{{ meal()!.strMeal }}</h2>
-  <img [src]="meal()!.strMealThumb" alt="{{ meal()!.strMeal }}" style="max-width: 300px;" />
-  <p><strong>Category:</strong> {{ meal()!.strCategory ?? 'N/A' }}</p>
-  <p><strong>Area:</strong> {{ meal()!.strArea ?? 'N/A' }}</p>
-  <p><strong>Instructions:</strong> {{ meal()!.strInstructions ?? 'N/A' }}</p>
-</div>
-}
-
-@if (error()) {
-<p>{{ error() }}</p>
+@for (meal of filteredMeals(); track meal.idMeal) {
+  <section style="border: 1px solid #ccc; padding: 10px; margin-top: 10px;">
+    <h2>{{ meal.strMeal }}</h2>
+    <img [src]="meal.strMealThumb" alt="{{ meal.strMeal }}" style="max-width: 300px;" />
+    <p><strong>Category:</strong> {{ meal.strCategory ?? 'N/A' }}</p>
+    <p><strong>Area:</strong> {{ meal.strArea ?? 'N/A' }}</p>
+    <p><strong>Instructions:</strong> {{ meal.strInstructions ?? 'N/A' }}</p>
+  </section>
 }

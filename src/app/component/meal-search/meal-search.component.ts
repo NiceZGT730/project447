@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { Meal } from '../../models/meal.model';
 import { MealdbService } from '../../services/mealdb.service';
 import { Router, RouterModule } from '@angular/router';
@@ -11,7 +11,7 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './meal-search.component.html',
   styleUrl: './meal-search.component.scss',
 })
-export class MealSearchComponent {
+export class MealSearchComponent implements OnInit {
   searchQuery = signal<string>(''); // Signal สำหรับคำค้น
   meals = signal<Meal[]>([]); // Signal สำหรับผลลัพธ์ทั้งหมด
   displayedMeals = signal<Meal[]>([]); // Signal สำหรับผลลัพธ์ที่แสดง
@@ -23,23 +23,26 @@ export class MealSearchComponent {
   private mealService = inject(MealdbService);
   private router = inject(Router);
 
-  updateQuery(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.searchQuery.set(input.value); // อัปเดต Signal
+  ngOnInit() {
+    // ✅ โหลดรายการอาหารทั้งหมดเมื่อเปิดหน้า
     this.searchMeals();
   }
 
+  updateQuery(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.searchQuery.set(input.value);
+    this.searchMeals(); // ✅ เรียกค้นหาทุกครั้งที่มีการกรอก (หรือจะใช้ debounce ก็ได้)
+  }
+
   searchMeals() {
-    if (!this.searchQuery().trim()) {
-      this.meals.set([]);
-      this.updateDisplayedMeals();
-      this.isLoading.set(false);
-      return;
-    }
+    const query = this.searchQuery().trim();
     this.isLoading.set(true);
-    this.mealService.searchMeals(this.searchQuery()).subscribe({
+
+    // ✅ ส่ง query ว่างไปยัง API ก็จะได้ "รายการทั้งหมด"
+    this.mealService.searchMeals(query).subscribe({
       next: (response) => {
         const mealList = response.meals || [];
+        console.log('Total meals received:', mealList.length);
         this.meals.set(mealList);
         this.totalPages.set(Math.ceil(mealList.length / this.pageSize()));
         this.currentPage.set(1);
