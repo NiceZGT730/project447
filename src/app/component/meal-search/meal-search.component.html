@@ -1,0 +1,26 @@
+<div>
+  <input [value]="searchQuery()" (input)="updateQuery($event)" placeholder="Search for meals..." />
+  <button (click)="searchMeals()">Search</button>
+</div>
+
+@if (isLoading()) {
+<div class="spinner">Loading... <progress></progress></div>
+}
+
+@if (displayedMeals().length > 0) {
+<ul>
+  @for (meal of displayedMeals(); track meal.idMeal) {
+  <li>
+    <a [routerLink]="['/meal', meal.idMeal]">{{ meal.strMeal }}</a>
+  </li>
+  }
+</ul>
+}
+
+@if (totalPages() > 1) {
+<div class="pagination">
+  <button (click)="changePage(currentPage() - 1)" [disabled]="currentPage() === 1">Previous</button>
+  <span>Page {{ currentPage() }} of {{ totalPages() }}</span>
+  <button (click)="changePage(currentPage() + 1)" [disabled]="currentPage() === totalPages()">Next</button>
+</div>
+}
