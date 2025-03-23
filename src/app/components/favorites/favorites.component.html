@@ -1,22 +1,60 @@
 <div class="container mx-auto py-8">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">Favorites</h1>
-    @if (favorites().length === 0) {
-      <p class="text-gray-600">No favorite movies yet.</p>
-    } @else {
-      <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        @for (movie of favorites(); track movie.id) {
-          <li class="bg-white p-4 rounded-lg shadow-md flex justify-between items-center">
-            <a [routerLink]="['/movie', movie.id]" class="text-blue-600 hover:text-blue-800">
-              {{ movie.primaryTitle }} ({{ movie.startYear }})
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Favorite Movies</h1>
+    @if (favoritesService.favorites().length > 0) {
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        @for (movie of paginatedFavorites(); track movie.id) {
+          <div class="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300">
+            <a [routerLink]="['/movie', movie.id]">
+              <img
+                [src]="movie.primaryImage"
+                [alt]="movie.primaryTitle"
+                class="w-full max-w-md rounded-lg mb-4"
+                loading="lazy"
+                (error)="onImageError(movie.id)"
+              />
+              <h3 class="text-lg font-semibold text-blue-600 hover:text-blue-800">
+                {{ movie.primaryTitle }} ({{ movie.startYear }})
+              </h3>
+              <p class="text-gray-600">Rating: {{ movie.averageRating }}/10</p>
             </a>
             <button
               (click)="removeFromFavorites(movie.id)"
-              class="bg-red-600 text-white py-1 px-3 rounded-md hover:bg-red-700 transition duration-300"
+              class="mt-2 bg-red-600 text-white py-1 px-3 rounded-md hover:bg-red-700 transition duration-300"
             >
               Remove
             </button>
-          </li>
+          </div>
         }
-      </ul>
+      </div>
+      <!-- Pagination Controls -->
+      <div class="mt-6 flex justify-center items-center space-x-4">
+        <button
+          (click)="changePage(-1)"
+          [disabled]="currentPage() === 1"
+          class="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50 hover:bg-gray-300 transition duration-300"
+        >
+          Previous
+        </button>
+        <span class="text-gray-700">Page {{ currentPage() }} of {{ totalPages() }}</span>
+        <button
+          (click)="changePage(1)"
+          [disabled]="currentPage() === totalPages()"
+          class="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50 hover:bg-gray-300 transition duration-300"
+        >
+          Next
+        </button>
+      </div>
+    } @else {
+      <p class="text-gray-600">No favorite movies yet.</p>
+    }
+
+    <!-- Notification Toast -->
+    @if (notification()) {
+      <div
+        class="fixed bottom-4 right-4 bg-green-500 text-white py-2 px-4 rounded-md shadow-lg transition-opacity duration-300"
+        [ngClass]="{'opacity-0': !notificationVisible(), 'opacity-100': notificationVisible()}"
+      >
+        {{ notification() }}
+      </div>
     }
   </div>
