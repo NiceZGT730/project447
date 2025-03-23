@@ -1,0 +1,22 @@
+<div class="container mx-auto py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Favorites</h1>
+    @if (favorites().length === 0) {
+      <p class="text-gray-600">No favorite movies yet.</p>
+    } @else {
+      <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        @for (movie of favorites(); track movie.id) {
+          <li class="bg-white p-4 rounded-lg shadow-md flex justify-between items-center">
+            <a [routerLink]="['/movie', movie.id]" class="text-blue-600 hover:text-blue-800">
+              {{ movie.primaryTitle }} ({{ movie.startYear }})
+            </a>
+            <button
+              (click)="removeFromFavorites(movie.id)"
+              class="bg-red-600 text-white py-1 px-3 rounded-md hover:bg-red-700 transition duration-300"
+            >
+              Remove
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </div>

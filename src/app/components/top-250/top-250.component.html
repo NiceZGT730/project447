@@ -1,0 +1,16 @@
+<div class="container mx-auto py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Top 250 Movies</h1>
+    @if (imdbService.top250Movies().length > 0) {
+      <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        @for (movie of imdbService.top250Movies(); track movie.id) {
+          <li class="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300">
+            <a [routerLink]="['/movie', movie.id]" class="text-blue-600 hover:text-blue-800">
+              {{ movie.primaryTitle }} ({{ movie.startYear }}) - {{ movie.averageRating }}/10
+            </a>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="text-gray-600">Loading Top 250 movies...</p>
+    }
+  </div>
