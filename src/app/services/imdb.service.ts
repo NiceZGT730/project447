@@ -15,7 +15,10 @@ export class ImdbService {
   top250Movies = signal<Movie[]>([]);
   searchResults = signal<Movie[]>([]);
   movieDetail = signal<Movie | null>(null);
-  isLoadingDetail = signal<boolean>(false); // เพิ่ม Signal สำหรับสถานะการโหลด
+  topBoxOffice = signal<Movie[]>([]); // เพิ่มสำหรับ Top Box Office
+  isLoadingDetail = signal<boolean>(false);
+  isLoadingSearch = signal<boolean>(false);
+  isLoadingTopBoxOffice = signal<boolean>(false); // เพิ่มสำหรับ Top Box Office
 
   private headers = {
     'x-rapidapi-key': this.apiKey,
@@ -23,10 +26,12 @@ export class ImdbService {
   };
 
   fetchTop250Movies() {
+    console.log('Fetching Top 250 movies...');
     this.http
       .get<any>(`${this.baseUrl}/top250-movies`, { headers: this.headers })
       .pipe(
         map(data => {
+          console.log('Top 250 API response:', data);
           return data.map((item: any) => ({
             id: item.id || '',
             url: item.url || '',
@@ -59,29 +64,35 @@ export class ImdbService {
         }),
         catchError(error => {
           console.error('Error fetching Top 250:', error);
+          this.top250Movies.set([]);
           return throwError(() => error);
         })
       )
-      .subscribe(movies => this.top250Movies.set(movies));
+      .subscribe(movies => {
+        console.log('Top 250 movies loaded:', movies.length);
+        this.top250Movies.set(movies);
+      });
   }
 
   searchMovies(query: string) {
+    console.log('Searching movies with query:', query);
+    this.isLoadingSearch.set(true);
+    this.searchResults.set([]);
     this.http
       .get<any>(`${this.baseUrl}/autocomplete?query=${encodeURIComponent(query)}`, { headers: this.headers })
       .pipe(
         map(data => {
-          console.log('Search API response:', data); // ดูโครงสร้างข้อมูล
-          // สมมติว่า response เป็น array ของผลการค้นหาโดยตรง (ตาม autocomplete)
+          console.log('Search API response:', data);
           return (data || []).map((item: any) => ({
             id: item.id || '',
             url: item.url || '',
-            primaryTitle: item.title || item.primaryTitle || 'Unknown Title', // ปรับตามโครงสร้างจริง
+            primaryTitle: item.title || item.primaryTitle || 'Unknown Title',
             originalTitle: item.originalTitle || item.title || 'Unknown Title',
             type: item.type || 'movie',
             description: item.description || 'No description available',
-            primaryImage: item.image || item.primaryImage || 'https://via.placeholder.com/300', // ปรับตามโครงสร้าง
+            primaryImage: item.image || item.primaryImage || 'https://via.placeholder.com/300',
             contentRating: item.contentRating || 'N/A',
-            startYear: item.year || item.startYear || 0, // ปรับตามโครงสร้าง
+            startYear: item.year || item.startYear || 0,
             endYear: item.endYear || null,
             releaseDate: item.releaseDate || 'N/A',
             interests: item.interests || [],
@@ -104,20 +115,80 @@ export class ImdbService {
         }),
         catchError(error => {
           console.error('Error searching movies:', error);
-          this.searchResults.set([]); // รีเซ็ตผลลัพธ์ถ้ามี error
+          this.searchResults.set([]);
+          this.isLoadingSearch.set(false);
           return throwError(() => error);
         })
       )
-      .subscribe(movies => this.searchResults.set(movies));
+      .subscribe(movies => {
+        console.log('Search results loaded:', movies.length);
+        this.searchResults.set(movies);
+        this.isLoadingSearch.set(false);
+      });
   }
+
+  fetchTopBoxOffice() {
+    console.log('Fetching Top Box Office movies...');
+    this.isLoadingTopBoxOffice.set(true); // เริ่มโหลด
+    this.topBoxOffice.set([]); // รีเซ็ตข้อมูลเก่า
+    this.http
+      .get<any>(`${this.baseUrl}/top-box-office`, { headers: this.headers })
+      .pipe(
+        map(data => {
+          console.log('Top Box Office API response:', data);
+          // สมมติว่า response เป็น array ของหนัง (ปรับตามโครงสร้างจริงจาก API)
+          return (data || []).map((item: any) => ({
+            id: item.id || '',
+            url: item.url || '',
+            primaryTitle: item.title || item.primaryTitle || 'Unknown Title',
+            originalTitle: item.originalTitle || item.title || 'Unknown Title',
+            type: item.type || 'movie',
+            description: item.description || 'No description available',
+            primaryImage: item.image || item.primaryImage || 'https://via.placeholder.com/300',
+            contentRating: item.contentRating || 'N/A',
+            startYear: item.year || item.startYear || 0,
+            endYear: item.endYear || null,
+            releaseDate: item.releaseDate || 'N/A',
+            interests: item.interests || [],
+            countriesOfOrigin: item.countriesOfOrigin || [],
+            externalLinks: item.externalLinks || [],
+            spokenLanguages: item.spokenLanguages || [],
+            filmingLocations: item.filmingLocations || [],
+            productionCompanies: item.productionCompanies || [],
+            budget: item.budget || 0,
+            grossWorldwide: item.grossWorldwide || 0,
+            genres: item.genres || [],
+            isAdult: item.isAdult || false,
+            runtimeMinutes: item.runtimeMinutes || 0,
+            averageRating: item.averageRating || 0,
+            numVotes: item.numVotes || 0,
+            directors: item.directors || [],
+            writers: item.writers || [],
+            cast: item.cast || [],
+          }));
+        }),
+        catchError(error => {
+          console.error('Error fetching Top Box Office:', error);
+          this.topBoxOffice.set([]);
+          this.isLoadingTopBoxOffice.set(false);
+          return throwError(() => error);
+        })
+      )
+      .subscribe(movies => {
+        console.log('Top Box Office movies loaded:', movies.length);
+        this.topBoxOffice.set(movies);
+        this.isLoadingTopBoxOffice.set(false); // หยุดโหลด
+      });
+  }
+
   fetchMovieDetail(id: string) {
-    this.isLoadingDetail.set(true); // เริ่มโหลด รีเซ็ตข้อมูลเก่า
-    this.movieDetail.set(null); // รีเซ็ต movieDetail ทันที
+    this.isLoadingDetail.set(true);
+    this.movieDetail.set(null);
     this.http
       .get<any>(`${this.baseUrl}/${id}`, { headers: this.headers })
       .pipe(
         map(data => {
-          console.log('API response:', data);
+          console.log('Detail API response:', data);
           return {
             id: data.id || id,
             url: data.url || '',
@@ -179,12 +250,13 @@ export class ImdbService {
             cast: [],
           };
           this.movieDetail.set(mockMovie);
+          this.isLoadingDetail.set(false);
           return throwError(() => error);
         })
       )
       .subscribe(movie => {
         this.movieDetail.set(movie);
-        this.isLoadingDetail.set(false); // โหลดเสร็จ
+        this.isLoadingDetail.set(false);
       });
   }
 }

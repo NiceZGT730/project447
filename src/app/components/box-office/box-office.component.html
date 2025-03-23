@@ -1,12 +1,13 @@
 <div class="container mx-auto py-8">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">Top 250 Movies</h1>
-    @if (imdbService.top250Movies().length > 0) {
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Top Box Office</h1>
+    @if (imdbService.isLoadingTopBoxOffice()) {
+      <p class="text-gray-600">Loading top box office movies...</p>
+    } @else if (imdbService.topBoxOffice().length > 0) {
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         @for (movie of paginatedMovies(); track movie.id) {
           <div class="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300">
             <a [routerLink]="['/movie', movie.id]">
-                <img [src]="movie.primaryImage" [alt]="movie.primaryTitle" class="w-full aspect-[2/3] object-contain rounded-md mb-2" />
-
+              <img [src]="movie.primaryImage" [alt]="movie.primaryTitle" class="w-full max-w-md rounded-lg mb-4" />
               <h3 class="text-lg font-semibold text-blue-600 hover:text-blue-800">
                 {{ movie.primaryTitle }} ({{ movie.startYear }})
               </h3>
@@ -34,6 +35,6 @@
         </button>
       </div>
     } @else {
-      <p class="text-gray-600">Loading Top 250 movies...</p>
+      <p class="text-gray-600">No top box office movies available.</p>
     }
   </div>

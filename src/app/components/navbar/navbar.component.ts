@@ -22,6 +22,7 @@ export class NavbarComponent {
   onSearch() {
     const query = this.searchForm.get('query')?.value;
     if (query) {
+      this.imdbService.searchResults.set([]);
       this.imdbService.searchMovies(query);
       this.router.navigate(['/search']);
       this.searchForm.reset();
