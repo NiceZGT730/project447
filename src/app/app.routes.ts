@@ -7,12 +7,14 @@ import { MovieDetailComponent } from './components/movie-detail/movie-detail.com
 import { FavoritesComponent } from './components/favorites/favorites.component';
 import { AboutComponent } from './components/about/about.component';
 import { BoxOfficeComponent } from './components/box-office/box-office.component';
+import { MostPopularComponent } from './components/most-popular/most-popular.component';
 
 export const routes: Routes = [
   // { path: '', component: MealSearchComponent },
   // { path: 'meal/:id', component: MealDetailComponent },
   { path: '', component: BoxOfficeComponent }, // หน้าแรก
   { path: 'top-250', component: Top250Component },
+  { path: 'most-popular', component: MostPopularComponent },
   { path: 'search', component: SearchComponent },
   { path: 'movie/:id', component: MovieDetailComponent },
   { path: 'favorites', component: FavoritesComponent },

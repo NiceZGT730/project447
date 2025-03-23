@@ -1,7 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { Movie } from '../models/movie.model';
 import { HttpClient } from '@angular/common/http';
-import { catchError, map, throwError } from 'rxjs';
+import { catchError, map, throwError, timeout } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -15,10 +15,12 @@ export class ImdbService {
   top250Movies = signal<Movie[]>([]);
   searchResults = signal<Movie[]>([]);
   movieDetail = signal<Movie | null>(null);
-  topBoxOffice = signal<Movie[]>([]); // เพิ่มสำหรับ Top Box Office
+  topBoxOffice = signal<Movie[]>([]);
+  mostPopularMovies = signal<Movie[]>([]); // เพิ่มสำหรับ Most Popular
   isLoadingDetail = signal<boolean>(false);
   isLoadingSearch = signal<boolean>(false);
-  isLoadingTopBoxOffice = signal<boolean>(false); // เพิ่มสำหรับ Top Box Office
+  isLoadingTopBoxOffice = signal<boolean>(false);
+  isLoadingMostPopular = signal<boolean>(false); // เพิ่มสำหรับ Most Popular
 
   private headers = {
     'x-rapidapi-key': this.apiKey,
@@ -39,7 +41,7 @@ export class ImdbService {
             originalTitle: item.originalTitle || item.primaryTitle || 'Unknown Title',
             type: item.type || 'movie',
             description: item.description || 'No description available',
-            primaryImage: item.primaryImage || 'https://via.placeholder.com/300',
+            primaryImage: item.primaryImage || 'https://placehold.co/300x300?text=Image+Not+Found',
             contentRating: item.contentRating || 'N/A',
             startYear: item.startYear || 0,
             endYear: item.endYear || null,
@@ -90,7 +92,7 @@ export class ImdbService {
             originalTitle: item.originalTitle || item.title || 'Unknown Title',
             type: item.type || 'movie',
             description: item.description || 'No description available',
-            primaryImage: item.image || item.primaryImage || 'https://via.placeholder.com/300',
+            primaryImage: item.image || item.primaryImage || 'https://placehold.co/300x300?text=Image+Not+Found',
             contentRating: item.contentRating || 'N/A',
             startYear: item.year || item.startYear || 0,
             endYear: item.endYear || null,
@@ -144,7 +146,7 @@ export class ImdbService {
             originalTitle: item.originalTitle || item.title || 'Unknown Title',
             type: item.type || 'movie',
             description: item.description || 'No description available',
-            primaryImage: item.image || item.primaryImage || 'https://via.placeholder.com/300',
+            primaryImage: item.image || item.primaryImage || 'https://placehold.co/300x300?text=Image+Not+Found',
             contentRating: item.contentRating || 'N/A',
             startYear: item.year || item.startYear || 0,
             endYear: item.endYear || null,
@@ -196,7 +198,7 @@ export class ImdbService {
             originalTitle: data.originalTitle || data.primaryTitle || 'Unknown Title',
             type: data.type || 'movie',
             description: data.description || 'No description available',
-            primaryImage: data.primaryImage || 'https://via.placeholder.com/300',
+            primaryImage: data.primaryImage || 'https://placehold.co/300x300?text=Image+Not+Found',
             contentRating: data.contentRating || 'N/A',
             startYear: data.startYear || 0,
             endYear: data.endYear || null,
@@ -229,7 +231,7 @@ export class ImdbService {
             numVotes: 1000,
             genres: ['Mock'],
             description: 'This is a mock movie',
-            primaryImage: 'https://via.placeholder.com/300',
+            primaryImage: 'https://placehold.co/300x300?text=Image+Not+Found',
             contentRating: 'PG-13',
             releaseDate: '2023-01-01',
             budget: 1000000,
@@ -257,6 +259,59 @@ export class ImdbService {
       .subscribe(movie => {
         this.movieDetail.set(movie);
         this.isLoadingDetail.set(false);
+      });
+  }
+  fetchMostPopularMovies() {
+    console.log('Fetching Most Popular movies...');
+    this.isLoadingMostPopular.set(true);
+    this.mostPopularMovies.set([]);
+    this.http
+      .get<any>(`${this.baseUrl}/most-popular-movies`, { headers: this.headers })
+      .pipe(
+        timeout(10000),
+        map(data => {
+          console.log('Most Popular API response:', data);
+          return (data || []).map((item: any) => ({
+            id: item.id || '',
+            url: item.url || '',
+            primaryTitle: item.primaryTitle || 'Unknown Title',
+            originalTitle: item.originalTitle || item.primaryTitle || 'Unknown Title',
+            type: item.type || 'movie',
+            description: item.description || 'No description available',
+            primaryImage: item.primaryImage || 'https://placehold.co/300x300?text=No+Image',
+            contentRating: item.contentRating || 'N/A',
+            startYear: item.startYear || 0,
+            endYear: item.endYear || null,
+            releaseDate: item.releaseDate || 'N/A',
+            interests: item.interests || [],
+            countriesOfOrigin: item.countriesOfOrigin || [],
+            externalLinks: item.externalLinks || [],
+            spokenLanguages: item.spokenLanguages || [],
+            filmingLocations: item.filmingLocations || [],
+            productionCompanies: item.productionCompanies || [],
+            budget: item.budget || 0,
+            grossWorldwide: item.grossWorldwide || 0,
+            genres: item.genres || [],
+            isAdult: item.isAdult || false,
+            runtimeMinutes: item.runtimeMinutes || 0,
+            averageRating: item.averageRating || 0,
+            numVotes: item.numVotes || 0,
+            directors: item.directors || [],
+            writers: item.writers || [],
+            cast: item.cast || [],
+          }));
+        }),
+        catchError(error => {
+          console.error('Error fetching Most Popular:', error);
+          this.mostPopularMovies.set([]);
+          this.isLoadingMostPopular.set(false);
+          return throwError(() => error);
+        })
+      )
+      .subscribe(movies => {
+        console.log('Most Popular movies loaded:', movies.length);
+        this.mostPopularMovies.set(movies);
+        this.isLoadingMostPopular.set(false);
       });
   }
 }
